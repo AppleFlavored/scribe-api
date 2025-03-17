@@ -31,6 +31,7 @@ app.post("/transcription", zValidator("json", transcriptionRequestSchema), async
 
   const audioResponse = await tryCatch(fetch(data.url));
   if (audioResponse.error) {
+    console.error({ "error": "FETCH_AUDIO", message: audioResponse.error.message });
     return ctx.json({ error: "Could not retreive audio file at provided url" }, 500);
   }
 
@@ -40,7 +41,8 @@ app.post("/transcription", zValidator("json", transcriptionRequestSchema), async
   };
   const modelResponse = await tryCatch(ctx.env.AI.run("@cf/openai/whisper", inputs));
   if (modelResponse.error) {
-    return ctx.json({ error: "Failed to create transcription" }, 500);
+    console.error({ "error": "MODEL_OUTPUT", message: modelResponse.error.message });
+    return ctx.json({ error: "Failed to create transcription", message: modelResponse.error.message }, 500);
   }
 
   return ctx.json({ transcription: modelResponse.value.text });
