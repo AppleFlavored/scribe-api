@@ -5,5 +5,10 @@
   "compatibility_date": "2025-03-17",
   "ai": {
     "binding": "AI"
+  },
+  "observability": {
+    "logs": {
+      "enabled": true
+    }
   }
 }
