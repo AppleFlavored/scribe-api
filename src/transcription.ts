@@ -11,7 +11,7 @@ export async function createTranscriptFromUrl(model: Ai<AiModels>, url: URL): Pr
     console.error({ "error": "FETCH_AUDIO", message: audioResponse.error.message });
     return { transcript: null, error: audioResponse.error };
   }
-  const audioBytes = new ArrayBuffer();
+  const audioBytes = await audioResponse.value.arrayBuffer();
 
   // Run the model with the audio bytes and return the transcript.
   const inputs: Ai_Cf_Openai_Whisper_Input = {
