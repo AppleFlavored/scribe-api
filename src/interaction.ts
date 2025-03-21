@@ -76,7 +76,7 @@ export async function handleApplicationCommandInteraction(interaction: APIApplic
 
 async function reply(interaction: APIInteraction, data: APIInteractionResponseCallbackData): Promise<void> {
   try {
-    await fetch(RouteBases.api + Routes.interactionCallback(interaction.id, interaction.token), {
+    const response = await fetch(RouteBases.api + Routes.interactionCallback(interaction.id, interaction.token), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -87,6 +87,7 @@ async function reply(interaction: APIInteraction, data: APIInteractionResponseCa
         data,
       }),
     });
+    console.log("Reply response:", response);
   } catch (error) {
     console.error({ error: "REPLY_ERROR", message: "Failed to reply to interaction.", exception: error });
   }
