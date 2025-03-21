@@ -19,7 +19,7 @@ export async function createTranscriptFromUrl(model: Ai<AiModels>, url: URL): Pr
   };
   const modelResponse = await tryCatch(model.run("@cf/openai/whisper", inputs));
   if (modelResponse.error) {
-    console.error({ "error": "MODEL_OUTPUT", message: modelResponse.error.message });
+    console.error({ "error": "MODEL_OUTPUT", message: modelResponse.error.message, byteLength: audioBytes.byteLength });
     return { transcript: null, error: modelResponse.error };
   }
   return { transcript: "Hello, World!", error: null };
