@@ -75,17 +75,21 @@ export async function handleApplicationCommandInteraction(interaction: APIApplic
 }
 
 async function reply(interaction: APIInteraction, data: APIInteractionResponseCallbackData): Promise<void> {
-  await fetch(RouteBases.api + Routes.interactionCallback(interaction.id, interaction.token), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "User-Agent": "Scribe (flavored.dev, 1.0)",
-    },
-    body: JSON.stringify(<APIInteractionResponse>{
-      type: InteractionResponseType.ChannelMessageWithSource,
-      data,
-    }),
-  });
+  try {
+    await fetch(RouteBases.api + Routes.interactionCallback(interaction.id, interaction.token), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "User-Agent": "Scribe (flavored.dev, 1.0)",
+      },
+      body: JSON.stringify(<APIInteractionResponse>{
+        type: InteractionResponseType.ChannelMessageWithSource,
+        data,
+      }),
+    });
+  } catch (error) {
+    console.error({ error: "REPLY_ERROR", message: "Failed to reply to interaction.", exception: error });
+  }
 } 
 
 async function editReply(interaction: APIInteraction, data: RESTPatchAPIWebhookWithTokenMessageJSONBody): Promise<void> {
