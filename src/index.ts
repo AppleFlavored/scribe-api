@@ -29,13 +29,12 @@ app.post("/interactions", async (ctx) => {
   }
 
   const interaction = await ctx.req.json() as APIInteraction;
-  console.log("Received interaction:", interaction);
 
   if (interaction.type === InteractionType.Ping) {
     return ctx.json({ type: InteractionResponseType.Pong });
   }
   if (interaction.type !== InteractionType.ApplicationCommand) {
-    console.log("Unhandled interaction type:", interaction.type);
+    console.log("Unhandled interaction type", interaction.type);
     return ctx.newResponse(null, 202);
   }
 

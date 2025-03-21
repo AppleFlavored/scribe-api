@@ -3,6 +3,7 @@ import {
   APIInteraction,
   APIInteractionResponse,
   APIInteractionResponseCallbackData,
+  APIMessage,
   ApplicationCommandType,
   InteractionResponseType,
   MessageFlags,
@@ -22,7 +23,6 @@ export async function handleApplicationCommandInteraction(interaction: APIApplic
   }
 
   const targetMessage = data.resolved.messages[data.target_id];
-  console.log("Target message:", targetMessage);
   if (!targetMessage) {
     return;
   }
@@ -60,7 +60,6 @@ export async function handleApplicationCommandInteraction(interaction: APIApplic
     return;
   }
 
-  console.log("Transcribing audio message (before defer)", { attachment, proxiedUrl });
   await deferReply(interaction);
 
   const { transcript, error } = await createTranscriptFromUrl(env.AI, proxiedUrl);
@@ -70,27 +69,22 @@ export async function handleApplicationCommandInteraction(interaction: APIApplic
     return;
   }
 
-  // await editReply(interaction, { content: `**Transcription:**\n> ${responseJson.transcription}\n\n-# ⚠️ May contain errors/inaccuracies • Original Message: ${messageUrl}` });
-  await editReply(interaction, { content: `**Transcription:**\n> ${transcript}\n\n-# ⚠️ May contain errors/inaccuracies` });
+  const messageUrl = messageLink(interaction, targetMessage);
+  await editReply(interaction, { content: `**Transcription:**\n> ${transcript}\n\n-# ⚠️ May contain errors/inaccuracies • Original Message: ${messageUrl}` });
 }
 
 async function reply(interaction: APIInteraction, data: APIInteractionResponseCallbackData): Promise<void> {
-  try {
-    const response = await fetch(RouteBases.api + Routes.interactionCallback(interaction.id, interaction.token), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "User-Agent": "Scribe (flavored.dev, 1.0)",
-      },
-      body: JSON.stringify(<APIInteractionResponse>{
-        type: InteractionResponseType.ChannelMessageWithSource,
-        data,
-      }),
-    });
-    console.log("Reply response:", response);
-  } catch (error) {
-    console.error({ error: "REPLY_ERROR", message: "Failed to reply to interaction.", exception: error });
-  }
+  await fetch(RouteBases.api + Routes.interactionCallback(interaction.id, interaction.token), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "User-Agent": "Scribe (flavored.dev, 1.0)",
+    },
+    body: JSON.stringify(<APIInteractionResponse>{
+      type: InteractionResponseType.ChannelMessageWithSource,
+      data,
+    }),
+  });
 } 
 
 async function editReply(interaction: APIInteraction, data: RESTPatchAPIWebhookWithTokenMessageJSONBody): Promise<void> {
@@ -115,4 +109,11 @@ async function deferReply(interaction: APIInteraction): Promise<void> {
       type: InteractionResponseType.DeferredChannelMessageWithSource,
     }),
   });
+}
+
+function messageLink(interaction: APIInteraction, message: APIMessage): string {
+  if (interaction.guild_id) {
+    return `https://discord.com/channels/${interaction.guild_id}/${message.channel_id}/${message.id}`;
+  }
+  return `https://discord.com/channels/@me/${message.channel_id}/${message.id}`;
 }
