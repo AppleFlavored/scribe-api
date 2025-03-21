@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "scribe-api",
+  "name": "scribe",
   "main": "src/index.ts",
   "compatibility_date": "2025-03-17",
   "ai": {

@@ -21,6 +21,7 @@ app.post("/interactions", async (ctx) => {
   const bytesCopy = await ctx.req.raw.clone().arrayBuffer();
   const { value: isValidRequest, error: validationError } = await tryCatch(verifyKey(bytesCopy, signature, timestamp, ctx.env.CLIENT_PUBLIC_KEY));
   if (validationError) {
+    console.error({ error: "KEY_VALIDATION_FAILED", message: "Failed to verify message from Discord.", exception: validationError });
     return ctx.newResponse(null, 401);
   }
   if (!isValidRequest) {
@@ -28,10 +29,13 @@ app.post("/interactions", async (ctx) => {
   }
 
   const interaction = await ctx.req.json() as APIInteraction;
+  console.log("Received interaction:", interaction);
+
   if (interaction.type === InteractionType.Ping) {
     return ctx.json({ type: InteractionResponseType.Pong });
   }
   if (interaction.type !== InteractionType.ApplicationCommand) {
+    console.log("Unhandled interaction type:", interaction.type);
     return ctx.newResponse(null, 202);
   }
 

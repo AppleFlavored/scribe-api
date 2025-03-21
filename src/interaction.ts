@@ -54,6 +54,7 @@ export async function handleApplicationCommandInteraction(interaction: APIApplic
     env.CDN_PROXY_URL
   );
   if (!proxiedUrl) {
+    console.error({ error: "PARSE_PROXY_URL", message: "Failed to parse proxied URL.", originalUrl: attachment.url, proxyUrl: env.CDN_PROXY_URL });
     await reply(interaction, { content: "Something went wrong! Try again later.", flags: MessageFlags.Ephemeral });
     return;
   }
@@ -62,6 +63,7 @@ export async function handleApplicationCommandInteraction(interaction: APIApplic
 
   const { transcript, error } = await createTranscriptFromUrl(env.AI, proxiedUrl);
   if (error) {
+    console.error({ error: "TRANSCRIPTION_ERROR", message: "Failed to create transcript.", exception: error });
     await editReply(interaction, { content: "Something went wrong while creating a transcript. Try again later." });
     return;
   }
