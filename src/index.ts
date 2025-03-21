@@ -1,51 +1,42 @@
-import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
-import { z } from "zod";
-import { toResult as tryCatch } from "./utils";
-import { timingSafeEqual } from "hono/utils/buffer";
+import { handleApplicationCommandInteraction } from "./interaction";
+import { tryCatch, verifyKey } from "./utils";
+import { APIInteraction, InteractionResponseType, InteractionType } from "discord-api-types/v10";
 
-type Bindings = {
+export type Bindings = {
   AI: Ai,
-  API_TOKEN: string;
+  CDN_PROXY_URL: string,
+  CLIENT_PUBLIC_KEY: string;
 };
 
 const app = new Hono<{ Bindings: Bindings }>();
 
-app.use(async (ctx, next) => {
-  const token = ctx.req.header("Authorization");
-  if (!token) {
+app.post("/interactions", async (ctx) => {
+  const signature = ctx.req.header("X-Signature-Ed25519");
+  const timestamp = ctx.req.header("X-Signature-Timestamp");
+  if (!signature || !timestamp) {
     return ctx.newResponse(null, 401);
   }
-  if (await timingSafeEqual(token, ctx.env.API_TOKEN) === false) {
+
+  const bytesCopy = await ctx.req.raw.clone().arrayBuffer();
+  const { value: isValidRequest, error: validationError } = await tryCatch(verifyKey(bytesCopy, signature, timestamp, ctx.env.CLIENT_PUBLIC_KEY));
+  if (validationError) {
     return ctx.newResponse(null, 401);
   }
-  return next();
-});
-
-const transcriptionRequestSchema = z.object({
-  url: z.string().url(),
-});
-
-app.post("/transcription", zValidator("json", transcriptionRequestSchema), async (ctx) => {
-  const data = ctx.req.valid("json");
-
-  const audioResponse = await tryCatch(fetch(data.url));
-  if (audioResponse.error) {
-    console.error({ "error": "FETCH_AUDIO", message: audioResponse.error.message });
-    return ctx.json({ error: "Could not retreive audio file at provided url" }, 500);
+  if (!isValidRequest) {
+    return ctx.newResponse(null, 401);
   }
 
-  const audioBytes = await audioResponse.value.arrayBuffer();
-  const inputs: Ai_Cf_Openai_Whisper_Input = {
-    audio: [...new Uint8Array(audioBytes)],
-  };
-  const modelResponse = await tryCatch(ctx.env.AI.run("@cf/openai/whisper", inputs));
-  if (modelResponse.error) {
-    console.error({ "error": "MODEL_OUTPUT", message: modelResponse.error.message });
-    return ctx.json({ error: "Failed to create transcription", message: modelResponse.error.message }, 500);
+  const interaction = await ctx.req.json() as APIInteraction;
+  if (interaction.type === InteractionType.Ping) {
+    return ctx.json({ type: InteractionResponseType.Pong });
+  }
+  if (interaction.type !== InteractionType.ApplicationCommand) {
+    return ctx.newResponse(null, 202);
   }
 
-  return ctx.json({ transcription: modelResponse.value.text });
+  handleApplicationCommandInteraction(interaction, ctx.env);
+  return ctx.newResponse(null, 202);
 });
 
 export default app;
