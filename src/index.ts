@@ -39,7 +39,7 @@ app.post("/interactions", async (ctx) => {
     return ctx.newResponse(null, 202);
   }
 
-  handleApplicationCommandInteraction(interaction, ctx.env);
+  ctx.executionCtx.waitUntil(handleApplicationCommandInteraction(interaction, ctx.env));
   return ctx.newResponse(null, 202);
 });
 
