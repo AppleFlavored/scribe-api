@@ -22,6 +22,7 @@ export async function handleApplicationCommandInteraction(interaction: APIApplic
   }
 
   const targetMessage = data.resolved.messages[data.target_id];
+  console.log("Target message:", targetMessage);
   if (!targetMessage) {
     return;
   }
@@ -59,6 +60,7 @@ export async function handleApplicationCommandInteraction(interaction: APIApplic
     return;
   }
 
+  console.log("Transcribing audio message (before defer)", { attachment, proxiedUrl });
   await deferReply(interaction);
 
   const { transcript, error } = await createTranscriptFromUrl(env.AI, proxiedUrl);
