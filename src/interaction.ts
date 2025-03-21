@@ -70,7 +70,7 @@ export async function handleApplicationCommandInteraction(interaction: APIApplic
   }
 
   const messageUrl = messageLink(interaction, targetMessage);
-  await editReply(interaction, { content: `**Transcription:**\n> ${transcript}\n\n-# ⚠️ May contain errors/inaccuracies • Original Message: ${messageUrl}` });
+  await editReply(interaction, { content: `**Transcript:**\n> ${transcript}\n\n-# ⚠️ May contain errors/inaccuracies • Original Message: ${messageUrl}` });
 }
 
 async function reply(interaction: APIInteraction, data: APIInteractionResponseCallbackData): Promise<void> {
